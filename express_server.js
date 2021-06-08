@@ -56,15 +56,16 @@ app.listen(PORT, () => {
 
 app.post("/urls", (req, res) => {
   console.log(req.body); // Log the POST request body to the console
-  urlDatabase[generateRandomString(6)] = req.body.longURL;
-  res.send("Ok"); // Respond with 'Ok' (we will replace this)
+  let shortURL = generateRandomString();
+  urlDatabase[shortURL] = req.body.longURL;
+  res.redirect(`/urls/${shortURL}`);
 });
 
 function generateRandomString() {
   const characters =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  const string = "";
-  for (let i = 0; i < length; i++) {
+  let string = "";
+  for (let i = 0; i <= 5; i++) {
     string += characters.charAt(Math.floor(Math.random() * characters.length));
   }
   return string;
