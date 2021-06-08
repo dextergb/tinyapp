@@ -63,13 +63,14 @@ app.listen(PORT, () => {
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
-  console.log("test");
+  console.log("deleted");
   delete urlDatabase[req.params.shortURL];
   res.redirect("/urls");
 });
 
-app.post("/urls/:shortURL/", (req, res) => {
-  urlDatabase[req.params.shortURL] = req.body.longURL;
+// POST route that updates a URL resource
+app.post("/urls/:id", (req, res) => {
+  urlDatabase[req.params.id] = req.body.editURL;
   res.redirect("/urls");
 });
 
