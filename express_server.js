@@ -59,3 +59,14 @@ app.post("/urls", (req, res) => {
   console.log(req.body); // Log the POST request body to the console
   res.send("Ok"); // Respond with 'Ok' (we will replace this)
 });
+
+function generateRandomString(length) {
+  const characters =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  const string = "";
+  for (let i = 0; i < length; i++) {
+    string += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return string;
+}
+generateRandomString(6);
