@@ -107,6 +107,11 @@ app.post("/register", (req, res) => {
   users[id] = user;
   const templateVars = { email };
   console.log("email: ", email, "password: ", password, "id: ", id);
+
+  if (Object.values(req.body).some((value) => value === "")) {
+    res.status(400).send("Email and Password Cannot Be Empty");
+  }
+
   res.cookie("user_id", id);
   res.redirect("/urls");
 });
@@ -119,7 +124,7 @@ app.post("/login", (req, res) => {
 
 app.post("/logout", (req, res) => {
   res.clearCookie("user_id");
-  res.redirect("/urls");
+  res.redirect("/register");
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
