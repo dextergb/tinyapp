@@ -29,6 +29,16 @@ const users = {
   },
 };
 
+function generateRandomString() {
+  const characters =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let string = "";
+  for (let i = 0; i <= 5; i++) {
+    string += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return string;
+}
+
 /*
 * The order of route definitions matters!
 * The GET /urls/new route needs to be defined before the GET /urls/:id route.
@@ -86,6 +96,18 @@ app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
+app.post("/register", (req, res) => {
+  const email = req.body.email;
+  const password = req.body.password;
+  const id = generateRandomString();
+  const user = { id, email, password };
+  users[id] = user;
+  const templateVars = { email };
+  console.log("email: ", email, "password: ", password, "id: ", id);
+  res.cookie("user_id", id);
+  res.redirect("/urls");
+});
+
 app.post("/login", (req, res) => {
   res.cookie("username", req.body.login);
   console.log("cookie:", req.body.login);
@@ -115,13 +137,3 @@ app.post("/urls", (req, res) => {
   urlDatabase[shortURL] = req.body.longURL;
   res.redirect(`/urls/${shortURL}`);
 });
-
-function generateRandomString() {
-  const characters =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  let string = "";
-  for (let i = 0; i <= 5; i++) {
-    string += characters.charAt(Math.floor(Math.random() * characters.length));
-  }
-  return string;
-}
