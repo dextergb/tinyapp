@@ -13,26 +13,35 @@
 
   <body>
     <%- include ('./partials/_header') %>
-    <div class="card text-center">
-      <div class="card-header"></div>
-      <div class="card-body">
-        <h4>REGISTER</h4>
-        <form method="POST" action="/register">
-          <div>
-            <label>Email Address:</label>
-            <input type="email" name="email" id="email" />
-          </div>
-          <div>
-            <label>Password:</label>
-            <input type="password" name="password" id="password" />
-          </div>
-          <div>
-            <button type="submit" class="btn btn-primary">Submit</button>
-          </div>
-        </form>
-      </div>
-      <div class="card-footer text-muted"></div>
-    </div>
+
+    <main style="margin: 1em">
+      <form action="/register" method="POST">
+        <div class="form-group col-sm-5">
+          <h2>Register</h2>
+          <label>Email Address</label>
+          <input
+            type="email"
+            class="form-control"
+            id="email"
+            placeholder="email"
+            name="email"
+          />
+        </div>
+        <div class="form-group col-sm-5">
+          <label>Password</label>
+          <input
+            type="password"
+            class="form-control"
+            id="passoword"
+            placeholder="password"
+            name="password"
+          />
+        </div>
+        <div class="form-group col-sm-5">
+          <button type="submit" class="btn btn-primary">Submit</button>
+        </div>
+      </form>
+    </main>
 
     <!-- Bootstrap JS -->
     <script
