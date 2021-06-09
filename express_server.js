@@ -29,6 +29,15 @@ const users = {
   },
 };
 
+const getUserByEmail = function (email) {
+  for (id of Object.keys(users)) {
+    if (users[id].email === email) {
+      return users[id];
+    }
+  }
+  return null;
+};
+
 function generateRandomString() {
   const characters =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -104,13 +113,18 @@ app.post("/register", (req, res) => {
   const password = req.body.password;
   const id = generateRandomString();
   const user = { id, email, password };
-  users[id] = user;
+
   const templateVars = { email };
   console.log("email: ", email, "password: ", password, "id: ", id);
 
   if (Object.values(req.body).some((value) => value === "")) {
-    res.status(400).send("Email and Password Cannot Be Empty");
+    return res.status(400).send("Email and Password Cannot Be Empty");
   }
+  if (getUserByEmail(email)) {
+    return res.status(400).send("Email Taken");
+  }
+
+  users[id] = user;
 
   res.cookie("user_id", id);
   res.redirect("/urls");
