@@ -33,9 +33,10 @@ const urlsForUser = function (id) {
   let userDatabase = {};
   for (let url in urlDatabase) {
     if (urlDatabase[url].userID === id) {
-      userDatabase[url] = {
-        longURL: urlDatabase[url].longURL,
-      };
+      userDatabase[url] = urlDatabase[url];
+      // userDatabase[url] = {
+      //   longURL: urlDatabase[url].longURL,
+      // };
     }
   }
   return userDatabase;
@@ -70,6 +71,10 @@ because Express will think that new is a route parameter.
 * A good rule of thumb to follow is that routes should be ordered from most specific to least specific.
 */
 
+app.listen(PORT, () => {
+  console.log(`Example app listening on port ${PORT}!`);
+});
+
 app.get("/urls/new", (req, res) => {
   const existingUser = users[req.cookies["user_id"]];
   if (existingUser) {
@@ -78,6 +83,51 @@ app.get("/urls/new", (req, res) => {
   } else {
     res.redirect("/login");
   }
+});
+
+app.get("/urls/:shortURL", (req, res) => {
+  const shortURL = req.params.shortURL;
+  const userId = req.cookies["user_id"];
+  const templateVars = {
+    shortURL,
+    longURL: urlDatabase[shortURL].longURL,
+    user: users[userId],
+  };
+  if (req.cookies["user_id"]) {
+    res.render("urls_show", templateVars);
+  } else {
+    res.redirect("/login");
+  }
+});
+
+app.get("/urls", (req, res) => {
+  const userId = req.cookies["user_id"];
+  const templateVars = {
+    urls: urlsForUser(userId),
+    user: users[userId],
+  };
+  if (userId) {
+    res.render("urls_index", templateVars);
+  } else {
+    res.redirect("/login");
+  }
+});
+
+app.get("/u/:shortURL", (req, res) => {
+  const shortURL = req.params.shortURL;
+  let longURL = urlDatabase[shortURL].longURL;
+  if (!longURL) {
+    return res.status("404").send("Not Found");
+  }
+  res.redirect(`http://${longURL}`);
+});
+
+app.get("/urls.json", (req, res) => {
+  res.json(urlDatabase);
+});
+
+app.get("/", (req, res) => {
+  res.redirect("/login");
 });
 
 app.get("/login", (req, res) => {
@@ -90,56 +140,6 @@ app.get("/login", (req, res) => {
 app.get("/register", (req, res) => {
   const templateVars = { user: users[req.cookies["user_id"]] };
   res.render("register", templateVars);
-});
-
-app.get("/urls/:shortURL", (req, res) => {
-  if (req.cookies["user_id"]) {
-    const shortURL = req.params.shortURL;
-    const templateVars = {
-      shortURL,
-      longURL: urlDatabase[shortURL].longURL,
-      user: req.cookies["user_id"],
-    };
-    res.render("urls_show", templateVars);
-  } else {
-    res.redirect("/login");
-  }
-});
-
-app.get("/urls", (req, res) => {
-  if (req.cookies["user_id"]) {
-    const templateVars = {
-      urls: urlsForUser(req.cookies["user_id"]),
-      user: req.cookies["user_id"],
-    };
-    res.render("urls_index", templateVars);
-  } else {
-    res.redirect("/login");
-  }
-});
-
-app.get("/u/:id", (req, res) => {
-  let longURL = urlDatabase[req.params.id].longURL;
-  if (!longURL) {
-    return res.status("404").send("Not Found");
-  }
-  res.redirect(longURL);
-});
-
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
-
-app.get("/", (req, res) => {
-  res.send("Hello!");
-});
-
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
-});
-
-app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
 });
 
 app.post("/register", (req, res) => {
@@ -187,11 +187,6 @@ app.post("/login", (req, res) => {
   res.redirect("/urls");
 });
 
-app.post("/logout", (req, res) => {
-  res.clearCookie("user_id");
-  res.redirect("/register");
-});
-
 app.post("/urls/:shortURL/delete", (req, res) => {
   console.log("deleted");
   if (req.cookies["user_id"]) {
@@ -207,9 +202,13 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 // POST route that updates a URL resource
 app.post("/urls/:id", (req, res) => {
   let { longURL } = req.body;
-  urlDatabase[req.params.id].longURL = longURL;
+  if (req.cookies["user_id"]) {
+    urlDatabase[req.params.id].longURL = longURL;
+    res.redirect("/urls");
+  } else {
+    res.redirect("/login");
+  }
   console.log("Long URL: ", longURL, "urlDatabase: ", urlDatabase);
-  res.redirect("/urls");
 });
 
 app.post("/urls", (req, res) => {
@@ -222,4 +221,9 @@ app.post("/urls", (req, res) => {
   };
   console.log(urlDatabase);
   res.redirect(`/urls/${shortURL}`);
+});
+
+app.post("/logout", (req, res) => {
+  res.clearCookie("user_id");
+  res.redirect("/register");
 });
