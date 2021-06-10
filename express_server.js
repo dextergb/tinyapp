@@ -29,7 +29,7 @@ const users = {
   },
 };
 
-const userUrls = function (id) {
+const urlsForUser = function (id) {
   let userDatabase = {};
   for (let url in urlDatabase) {
     if (urlDatabase[url].userID === id) {
@@ -109,7 +109,7 @@ app.get("/urls/:shortURL", (req, res) => {
 app.get("/urls", (req, res) => {
   if (req.cookies["user_id"]) {
     const templateVars = {
-      urls: userUrls(req.cookies["user_id"]),
+      urls: urlsForUser(req.cookies["user_id"]),
       user: req.cookies["user_id"],
     };
     res.render("urls_index", templateVars);
