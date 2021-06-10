@@ -59,10 +59,13 @@ because Express will think that new is a route parameter.
 */
 
 app.get("/urls/new", (req, res) => {
-  const templateVars = {
-    user: users[req.cookies["user_id"]],
-  };
-  res.render("urls_new", templateVars);
+  const existingUser = users[req.cookies["user_id"]];
+  if (existingUser) {
+    const templateVars = { user: existingUser };
+    res.render("urls_new", templateVars);
+  } else {
+    res.redirect("/login");
+  }
 });
 
 app.get("/login", (req, res) => {
