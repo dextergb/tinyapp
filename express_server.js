@@ -82,7 +82,7 @@ app.get("/urls/:shortURL", (req, res) => {
 app.get("/urls", (req, res) => {
   const userId = req.session.user_id;
   const templateVars = {
-    urls: urlsForUser(userId),
+    urls: urlsForUser(userId, urlDatabase),
     user: users[userId],
   };
   if (userId) {
@@ -134,7 +134,7 @@ app.post("/register", (req, res) => {
   if (Object.values(req.body).some((value) => value === "")) {
     return res.status(400).send("Email and Password Cannot Be Empty");
   }
-  if (getUserByEmail(email)) {
+  if (getUserByEmail(email, users)) {
     return res.status(400).send("Email Already Used");
   }
 
@@ -154,10 +154,10 @@ app.post("/login", (req, res) => {
   if (Object.values(req.body).some((value) => value === "")) {
     return res.status(400).send("Email and Password Cannot Be Empty");
   }
-  if (!getUserByEmail(email)) {
+  if (!getUserByEmail(email, users)) {
     return res.status(403).send("Email Cannot Be Found");
   }
-  const userFromDatabase = getUserByEmail(email);
+  const userFromDatabase = getUserByEmail(email, users);
   if (!bcrypt.compareSync(password, userFromDatabase.password)) {
     return res.status(403).send("Incorrect Password");
   }

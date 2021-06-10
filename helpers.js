@@ -1,20 +1,17 @@
-const urlsForUser = function (id) {
+const urlsForUser = function (id, urlDatabase) {
   let userDatabase = {};
   for (let url in urlDatabase) {
     if (urlDatabase[url].userID === id) {
       userDatabase[url] = urlDatabase[url];
-      // userDatabase[url] = {
-      //   longURL: urlDatabase[url].longURL,
-      // };
     }
   }
   return userDatabase;
 };
 
-const getUserByEmail = function (email) {
-  for (id of Object.keys(users)) {
-    if (users[id].email === email) {
-      return users[id];
+const getUserByEmail = function (email, database) {
+  for (id of Object.keys(database)) {
+    if (database[id].email === email) {
+      return database[id];
     }
   }
   return null;
