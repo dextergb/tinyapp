@@ -2,7 +2,9 @@ const express = require("express");
 const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
-const { response, request } = require("express");
+const { res, req } = require("express");
+
+const bcrypt = require("bcrypt");
 
 const app = express();
 app.set("view engine", "ejs");
@@ -149,7 +151,7 @@ app.post("/register", (req, res) => {
   const user = { id, email, password };
 
   const templateVars = { email };
-  console.log("email: ", email, "password: ", password, "id: ", id);
+  console.log("email: ", email, "password: ", Password, "id: ", id);
 
   if (Object.values(req.body).some((value) => value === "")) {
     return res.status(400).send("Email and Password Cannot Be Empty");
