@@ -2,6 +2,7 @@ const express = require("express");
 const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
+const cookieSession = require("cookie-session");
 const { res, req } = require("express");
 
 const bcrypt = require("bcrypt");
@@ -12,6 +13,12 @@ app.set("view engine", "ejs");
 //middleware
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(
+  cookieSession({
+    name: "session",
+    keys: ["key1", "key2"],
+  })
+);
 
 const urlDatabase = {
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
@@ -74,7 +81,7 @@ because Express will think that new is a route parameter.
 */
 
 app.get("/urls/new", (req, res) => {
-  const existingUser = users[req.cookies["user_id"]];
+  const existingUser = users[req.session.user_id];
   if (existingUser) {
     const templateVars = { user: existingUser };
     res.render("urls_new", templateVars);
@@ -85,13 +92,13 @@ app.get("/urls/new", (req, res) => {
 
 app.get("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
-  const userId = req.cookies["user_id"];
+  const userId = req.session.user_id;
   const templateVars = {
     shortURL,
     longURL: urlDatabase[shortURL].longURL,
     user: users[userId],
   };
-  if (req.cookies["user_id"]) {
+  if (req.session.user_id) {
     res.render("urls_show", templateVars);
   } else {
     res.redirect("/login");
@@ -99,7 +106,7 @@ app.get("/urls/:shortURL", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  const userId = req.cookies["user_id"];
+  const userId = req.session.user_id;
   const templateVars = {
     urls: urlsForUser(userId),
     user: users[userId],
@@ -130,13 +137,13 @@ app.get("/", (req, res) => {
 
 app.get("/login", (req, res) => {
   const templateVars = {
-    user: users[req.cookies["user_id"]],
+    user: users[req.session.user_id],
   };
   res.render("login", templateVars);
 });
 
 app.get("/register", (req, res) => {
-  const templateVars = { user: users[req.cookies["user_id"]] };
+  const templateVars = { user: users[req.session.user_id] };
   res.render("register", templateVars);
 });
 
@@ -158,8 +165,9 @@ app.post("/register", (req, res) => {
   }
 
   users[id] = user;
+  // console.log(res.req);
+  req.session.user_id = id;
 
-  res.cookie("user_id", id);
   res.redirect("/urls");
 });
 
@@ -180,14 +188,13 @@ app.post("/login", (req, res) => {
   if (!bcrypt.compareSync(password, userFromDatabase.password)) {
     return res.status(403).send("Incorrect Password");
   }
-  res.cookie("user_id", userFromDatabase.id);
-  console.log("cookie:", userFromDatabase.id);
+  req.session.user_id = userFromDatabase.id;
   res.redirect("/urls");
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
   console.log("deleted");
-  if (req.cookies["user_id"]) {
+  if (req.session.user_id) {
     const shortURL = req.params.shortURL;
     delete urlDatabase[shortURL];
 
@@ -200,7 +207,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 // POST route that updates a URL resource
 app.post("/urls/:id", (req, res) => {
   let { longURL } = req.body;
-  if (req.cookies["user_id"]) {
+  if (req.session.user_id) {
     urlDatabase[req.params.id].longURL = longURL;
     res.redirect("/urls");
   } else {
@@ -215,13 +222,14 @@ app.post("/urls", (req, res) => {
   let { longURL } = req.body;
   urlDatabase[shortURL] = {
     longURL,
-    userID: req.cookies["user_id"],
+    userID: req.session.user_id,
   };
   console.log(urlDatabase);
   res.redirect(`/urls/${shortURL}`);
 });
 
 app.post("/logout", (req, res) => {
+  req.session = null;
   res.clearCookie("user_id");
   res.redirect("/register");
 });
