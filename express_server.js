@@ -128,7 +128,7 @@ app.post("/register", (req, res) => {
     return res.status(400).send("Email and Password Cannot Be Empty");
   }
   if (getUserByEmail(email)) {
-    return res.status(400).send("Email Taken");
+    return res.status(400).send("Email Already Used");
   }
 
   users[id] = user;
@@ -138,8 +138,25 @@ app.post("/register", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  res.cookie("username", req.body.login);
-  console.log("cookie:", req.body.login);
+  const email = req.body.email;
+  const password = req.body.password;
+
+  const templateVars = { email };
+  // console.log("email: ", email, "password: ", password, "id: ", id);
+
+  if (Object.values(req.body).some((value) => value === "")) {
+    return res.status(400).send("Email and Password Cannot Be Empty");
+  }
+  if (!getUserByEmail(email)) {
+    return res.status(403).send("Email Cannot Be Found");
+  }
+  const userFromDatabase = getUserByEmail(email);
+  if (userFromDatabase.password !== password) {
+    return res.status(403).send("Incorrect Password");
+  }
+
+  res.cookie("user_id", userFromDatabase.id);
+  console.log("cookie:", userFromDatabase.id);
   res.redirect("/urls");
 });
 
