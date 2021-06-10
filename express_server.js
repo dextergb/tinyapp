@@ -175,7 +175,6 @@ app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   const templateVars = { email };
-  console.log("email: ", email, "password: ", password, "id: ", id);
   console.log(users);
 
   if (Object.values(req.body).some((value) => value === "")) {
