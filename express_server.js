@@ -119,7 +119,7 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/u/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id].longURL;
+  let longURL = urlDatabase[req.params.id].longURL;
   if (!longURL) {
     return res.status("404").send("Not Found");
   }
