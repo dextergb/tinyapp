@@ -16,42 +16,24 @@
       <div class="navbar-nav">
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
-      </div>
-      <div>
         <% if (!user) { %>
-        <!-- <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-            <div class="navbar-nav">
-              <a class="nav-item nav-link" href="/login">Sign in</a>
-              <a class="nav-item nav-link" href="/register">Register</a>
-            </div> -->
-
-        <form
-          class="collapse navbar-collapse"
-          id="navbarNavAltMarkup"
-          action="/login"
-          method="POST"
-        >
-          <div class="navbar-nav">
-            <a class="nav-item nav-link" href="/login">Sign in</a>
-          </div>
-        </form>
-        <form
-          class="collapse navbar-collapse"
-          id="navbarNavAltMarkup"
-          action="/register"
-          method="POST"
-        >
-          <div class="navbar-nav">
-            <a class="nav-item nav-link" href="/register">Register</a>
-          </div>
-        </form>
-        <% } else { %>
-        <h5>Logged in as: <%= user.email %></h5>
-        <form class="form-inline" action="/logout" method="POST">
-          <button type="logout" class="btn btn-dark">Logout</button>
-        </form>
-        <% } %>
+        <a class="nav-item nav-link" href="/login">Sign in</a>
+        <a class="nav-item nav-link" href="/register">Register</a>
       </div>
     </div>
+    <% } else { %>
+    <div class="navbar-nav ml-auto">
+      <span>Logged in as: <%= user.email %></span>
+      <form
+        class="collapse navbar-collapse"
+        id="navbarNavAltMarkup"
+        action="/logout"
+        method="POST"
+      >
+        <button type="logout" class="btn btn-dark">Logout</button>
+      </form>
+    </div>
+
+    <% } %>
   </nav>
 </header>
