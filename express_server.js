@@ -22,12 +22,12 @@ const users = {
   userRandomID: {
     id: "userRandomID",
     email: "user@example.com",
-    password: "purple-monkey-dinosaur",
+    password: bcrypt.hashSync("purple-monkey-dinosaur", 10),
   },
   user2RandomID: {
     id: "user2RandomID",
     email: "user2@example.com",
-    password: "dishwasher-funk",
+    password: bcrypt.hashSync("dishwasher-funk", 10),
   },
 };
 
@@ -72,10 +72,6 @@ any calls to /urls/new will be handled by app.get("/urls/:id", ...)
 because Express will think that new is a route parameter.
 * A good rule of thumb to follow is that routes should be ordered from most specific to least specific.
 */
-
-app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
-});
 
 app.get("/urls/new", (req, res) => {
   const existingUser = users[req.cookies["user_id"]];
@@ -149,7 +145,7 @@ app.post("/register", (req, res) => {
   const password = req.body.password;
   const hashedPassword = bcrypt.hashSync(password, 10);
   const id = generateRandomString();
-  const user = { id, email, password };
+  const user = { id, email, password: hashedPassword };
 
   const templateVars = { email };
   console.log("email: ", email, "password: ", hashedPassword, "id: ", id);
@@ -170,9 +166,9 @@ app.post("/register", (req, res) => {
 app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-
   const templateVars = { email };
-  // console.log("email: ", email, "password: ", password, "id: ", id);
+  console.log("email: ", email, "password: ", password, "id: ", id);
+  console.log(users);
 
   if (Object.values(req.body).some((value) => value === "")) {
     return res.status(400).send("Email and Password Cannot Be Empty");
@@ -181,10 +177,9 @@ app.post("/login", (req, res) => {
     return res.status(403).send("Email Cannot Be Found");
   }
   const userFromDatabase = getUserByEmail(email);
-  if (userFromDatabase.password !== password) {
+  if (!bcrypt.compareSync(password, userFromDatabase.password)) {
     return res.status(403).send("Incorrect Password");
   }
-
   res.cookie("user_id", userFromDatabase.id);
   console.log("cookie:", userFromDatabase.id);
   res.redirect("/urls");
@@ -229,4 +224,8 @@ app.post("/urls", (req, res) => {
 app.post("/logout", (req, res) => {
   res.clearCookie("user_id");
   res.redirect("/register");
+});
+
+app.listen(PORT, () => {
+  console.log(`Example app listening on port ${PORT}!`);
 });
