@@ -147,11 +147,12 @@ app.get("/register", (req, res) => {
 app.post("/register", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
+  const hashedPassword = bcrypt.hashSync(password, 10);
   const id = generateRandomString();
   const user = { id, email, password };
 
   const templateVars = { email };
-  console.log("email: ", email, "password: ", Password, "id: ", id);
+  console.log("email: ", email, "password: ", hashedPassword, "id: ", id);
 
   if (Object.values(req.body).some((value) => value === "")) {
     return res.status(400).send("Email and Password Cannot Be Empty");
