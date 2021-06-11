@@ -1,30 +1,25 @@
+const PORT = 8080;
 const express = require("express");
-const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
-const cookieParser = require("cookie-parser");
 const cookieSession = require("cookie-session");
-const { res, req } = require("express");
-
 const bcrypt = require("bcrypt");
-
 const {
   urlsForUser,
   generateRandomString,
   getUserByEmail,
 } = require("./helpers");
-
 const app = express();
-app.set("view engine", "ejs");
 
-//middleware
+app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(cookieParser());
 app.use(
   cookieSession({
     name: "session",
     keys: ["key1", "key2"],
   })
 );
+
+/**-------------GLOBAL VARIABLES-------------**/
 
 const urlDatabase = {
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
@@ -44,15 +39,7 @@ const users = {
   },
 };
 
-/*
-* The order of route definitions matters!
-* The GET /urls/new route needs to be defined before the GET /urls/:id route.
-* Routes defined earlier will take precedence,
-so if we place this route after the /urls/:id definition,
-any calls to /urls/new will be handled by app.get("/urls/:id", ...)
-because Express will think that new is a route parameter.
-* A good rule of thumb to follow is that routes should be ordered from most specific to least specific.
-*/
+/**-------------GET METHODS-------------**/
 
 app.get("/urls/new", (req, res) => {
   const existingUser = users[req.session.user_id];
@@ -65,18 +52,27 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  const shortURL = req.params.shortURL;
+  let user = users[req.session["user_id"]];
+  let checkLong = urlDatabase[req.params.shortURL];
   const userId = req.session.user_id;
-  const templateVars = {
-    shortURL,
-    longURL: urlDatabase[shortURL].longURL,
-    user: users[userId],
-  };
-  if (req.session.user_id) {
-    res.render("urls_show", templateVars);
+  if (!user) {
+    return res.status("401").send("Please Sign In To View This Page");
+  } else if (checkLong.userID !== req.session["user_id"]) {
+    return res.status("401").send("Not Authorized");
   } else {
-    res.redirect("/login");
+    let emailPass = user.email;
+    const templateVars = {
+      shortURL: req.params.shortURL,
+      longURL: urlDatabase[req.params.shortURL].longURL,
+      email: emailPass,
+      user: users[userId],
+    };
+    res.render("urls_show", templateVars);
   }
+});
+
+app.get("/urls.json", (req, res) => {
+  res.json(urlDatabase);
 });
 
 app.get("/urls", (req, res) => {
@@ -88,38 +84,52 @@ app.get("/urls", (req, res) => {
   if (userId) {
     res.render("urls_index", templateVars);
   } else {
-    res.redirect("/login");
+    res.status("401").send("Please Sign In To View This Page");
   }
 });
 
 app.get("/u/:shortURL", (req, res) => {
-  const shortURL = req.params.shortURL;
-  let longURL = urlDatabase[shortURL].longURL;
-  if (!longURL) {
-    return res.status("404").send("Not Found");
+  let shortURL = req.params.shortURL;
+  if (urlDatabase[shortURL]) {
+    let longURL = urlDatabase[shortURL].longURL;
+    res.redirect(`http://${longURL}`);
+  } else {
+    res.status("404").send("Not Found");
   }
-  res.redirect(`http://${longURL}`);
-});
-
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
 });
 
 app.get("/", (req, res) => {
-  res.redirect("/login");
+  const userId = req.session.user_id;
+  if (userId) {
+    res.redirect("/urls");
+  } else {
+    res.redirect("/login");
+  }
 });
 
 app.get("/login", (req, res) => {
+  const userId = req.session.user_id;
   const templateVars = {
     user: users[req.session.user_id],
   };
+  if (userId) {
+    res.redirect("/urls");
+  }
   res.render("login", templateVars);
 });
 
 app.get("/register", (req, res) => {
-  const templateVars = { user: users[req.session.user_id] };
+  const userId = req.session.user_id;
+  const templateVars = {
+    user: users[req.session.user_id],
+  };
+  if (userId) {
+    res.redirect("/urls");
+  }
   res.render("register", templateVars);
 });
+
+/**-------------POST METHODS-------------**/
 
 app.post("/register", (req, res) => {
   const email = req.body.email;
@@ -128,7 +138,6 @@ app.post("/register", (req, res) => {
   const id = generateRandomString();
   const user = { id, email, password: hashedPassword };
 
-  const templateVars = { email };
   console.log("email: ", email, "password: ", hashedPassword, "id: ", id);
 
   if (Object.values(req.body).some((value) => value === "")) {
@@ -137,18 +146,14 @@ app.post("/register", (req, res) => {
   if (getUserByEmail(email, users)) {
     return res.status(400).send("Email Already Used");
   }
-
   users[id] = user;
-  // console.log(res.req);
   req.session.user_id = id;
-
   res.redirect("/urls");
 });
 
 app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  const templateVars = { email };
   console.log(users);
 
   if (Object.values(req.body).some((value) => value === "")) {
@@ -166,7 +171,7 @@ app.post("/login", (req, res) => {
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
-  console.log("deleted");
+  console.log("Short URL Deleted");
   if (req.session.user_id) {
     const shortURL = req.params.shortURL;
     delete urlDatabase[shortURL];
@@ -177,7 +182,6 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   }
 });
 
-// POST route that updates a URL resource
 app.post("/urls/:id", (req, res) => {
   let { longURL } = req.body;
   if (req.session.user_id) {
@@ -190,7 +194,7 @@ app.post("/urls/:id", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  console.log(req.body); // Log the POST request body to the console
+  console.log(req.body);
   let shortURL = generateRandomString();
   let { longURL } = req.body;
   urlDatabase[shortURL] = {
@@ -204,9 +208,9 @@ app.post("/urls", (req, res) => {
 app.post("/logout", (req, res) => {
   req.session = null;
   res.clearCookie("user_id");
-  res.redirect("/register");
+  res.redirect("/login"); // Compass says redirect to "/url" but that doesn't make sense
 });
 
 app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
+  console.log(`TinyApp listening on port ${PORT}!`);
 });
