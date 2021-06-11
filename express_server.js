@@ -114,6 +114,7 @@ app.get("/login", (req, res) => {
   };
   if (userId) {
     res.redirect("/urls");
+    return;
   }
   res.render("login", templateVars);
 });
