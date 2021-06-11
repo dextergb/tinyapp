@@ -138,8 +138,6 @@ app.post("/register", (req, res) => {
   const id = generateRandomString();
   const user = { id, email, password: hashedPassword };
 
-  console.log("email: ", email, "password: ", hashedPassword, "id: ", id);
-
   if (Object.values(req.body).some((value) => value === "")) {
     return res.status(400).send("Email and Password Cannot Be Empty");
   }
@@ -154,7 +152,6 @@ app.post("/register", (req, res) => {
 app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  console.log(users);
 
   if (Object.values(req.body).some((value) => value === "")) {
     return res.status(400).send("Email and Password Cannot Be Empty");
@@ -171,7 +168,6 @@ app.post("/login", (req, res) => {
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
-  console.log("Short URL Deleted");
   if (req.session.user_id) {
     const shortURL = req.params.shortURL;
     delete urlDatabase[shortURL];
@@ -190,18 +186,15 @@ app.post("/urls/:id", (req, res) => {
   } else {
     res.redirect("/login");
   }
-  console.log("Long URL: ", longURL, "urlDatabase: ", urlDatabase);
 });
 
 app.post("/urls", (req, res) => {
-  console.log(req.body);
   let shortURL = generateRandomString();
   let { longURL } = req.body;
   urlDatabase[shortURL] = {
     longURL,
     userID: req.session.user_id,
   };
-  console.log(urlDatabase);
   res.redirect(`/urls/${shortURL}`);
 });
 
