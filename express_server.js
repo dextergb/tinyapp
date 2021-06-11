@@ -1,5 +1,8 @@
+/**-------------Modules and Helper Functions-------------**/
+
 const PORT = 8080;
 const express = require("express");
+const app = express();
 const bodyParser = require("body-parser");
 const cookieSession = require("cookie-session");
 const bcrypt = require("bcrypt");
@@ -8,7 +11,8 @@ const {
   generateRandomString,
   getUserByEmail,
 } = require("./helpers");
-const app = express();
+
+/**-------------Middleware-------------**/
 
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -19,7 +23,7 @@ app.use(
   })
 );
 
-/**-------------GLOBAL VARIABLES-------------**/
+/**-------------Global Variables-------------**/
 
 const urlDatabase = {
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
@@ -39,8 +43,9 @@ const users = {
   },
 };
 
-/**-------------GET METHODS-------------**/
+/**-------------GET Methods-------------**/
 
+// Page to create a new shortURL
 app.get("/urls/new", (req, res) => {
   const existingUser = users[req.session.user_id];
   if (existingUser) {
@@ -51,6 +56,7 @@ app.get("/urls/new", (req, res) => {
   }
 });
 
+// Page to edit shortURL
 app.get("/urls/:shortURL", (req, res) => {
   let user = users[req.session["user_id"]];
   let checkLong = urlDatabase[req.params.shortURL];
@@ -71,10 +77,12 @@ app.get("/urls/:shortURL", (req, res) => {
   }
 });
 
+// Access urlDatabase in JSON format
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
+// Dynamic page to view, edit, and delete URLs
 app.get("/urls", (req, res) => {
   const userId = req.session.user_id;
   const templateVars = {
@@ -88,6 +96,7 @@ app.get("/urls", (req, res) => {
   }
 });
 
+// Redirect each created shortURL
 app.get("/u/:shortURL", (req, res) => {
   let shortURL = req.params.shortURL;
   if (urlDatabase[shortURL]) {
@@ -98,6 +107,7 @@ app.get("/u/:shortURL", (req, res) => {
   }
 });
 
+// Redirect based on whether currently logged in
 app.get("/", (req, res) => {
   const userId = req.session.user_id;
   if (userId) {
@@ -107,6 +117,7 @@ app.get("/", (req, res) => {
   }
 });
 
+// Page to login
 app.get("/login", (req, res) => {
   const userId = req.session.user_id;
   const templateVars = {
@@ -119,6 +130,7 @@ app.get("/login", (req, res) => {
   res.render("login", templateVars);
 });
 
+// Page to create account
 app.get("/register", (req, res) => {
   const userId = req.session.user_id;
   const templateVars = {
@@ -130,8 +142,9 @@ app.get("/register", (req, res) => {
   res.render("register", templateVars);
 });
 
-/**-------------POST METHODS-------------**/
+/**-------------POST Methods-------------**/
 
+// Submit register information
 app.post("/register", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
@@ -150,6 +163,7 @@ app.post("/register", (req, res) => {
   res.redirect("/urls");
 });
 
+// Submit login information
 app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
@@ -168,6 +182,7 @@ app.post("/login", (req, res) => {
   res.redirect("/urls");
 });
 
+// Submit delete shortURL request
 app.post("/urls/:shortURL/delete", (req, res) => {
   if (req.session.user_id) {
     const shortURL = req.params.shortURL;
@@ -179,6 +194,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   }
 });
 
+// Submit urls shortURL request
 app.post("/urls/:id", (req, res) => {
   let { longURL } = req.body;
   if (req.session.user_id) {
@@ -189,6 +205,7 @@ app.post("/urls/:id", (req, res) => {
   }
 });
 
+// Submit a new shortURL
 app.post("/urls", (req, res) => {
   let shortURL = generateRandomString();
   let { longURL } = req.body;
@@ -199,12 +216,14 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${shortURL}`);
 });
 
+// Logout and clear all cookies
 app.post("/logout", (req, res) => {
   req.session = null;
   res.clearCookie("user_id");
   res.redirect("/login"); // Compass says redirect to "/url" but that doesn't make sense
 });
 
+// Notifies server is activated
 app.listen(PORT, () => {
   console.log(`TinyApp listening on port ${PORT}!`);
 });
