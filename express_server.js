@@ -58,8 +58,8 @@ app.get("/urls/new", (req, res) => {
 
 // Page to edit shortURL
 app.get("/urls/:shortURL", (req, res) => {
-  let user = users[req.session["user_id"]];
-  let checkLong = urlDatabase[req.params.shortURL];
+  const user = users[req.session["user_id"]];
+  const checkLong = urlDatabase[req.params.shortURL];
   const userId = req.session.user_id;
   if (!user) {
     return res.status("401").send("Please Sign In To View This Page");
@@ -101,7 +101,7 @@ app.get("/u/:shortURL", (req, res) => {
   let shortURL = req.params.shortURL;
   if (urlDatabase[shortURL]) {
     let longURL = urlDatabase[shortURL].longURL;
-    res.redirect(`http://${longURL}`);
+    res.redirect(`${longURL}`);
   } else {
     res.status("404").send("Not Found");
   }
