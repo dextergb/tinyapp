@@ -185,10 +185,14 @@ app.post("/login", (req, res) => {
 // Submit delete shortURL request
 app.post("/urls/:shortURL/delete", (req, res) => {
   if (req.session.user_id) {
-    const shortURL = req.params.shortURL;
-    delete urlDatabase[shortURL];
+    if (urlDatabase[req.params.id].user_id === req.session.user_id) {
+      const shortURL = req.params.shortURL;
+      delete urlDatabase[shortURL];
 
-    res.redirect("/urls");
+      res.redirect("/urls");
+    } else {
+      res.redirect("/login");
+    }
   } else {
     res.redirect("/login");
   }
@@ -198,8 +202,12 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 app.post("/urls/:id", (req, res) => {
   let { longURL } = req.body;
   if (req.session.user_id) {
-    urlDatabase[req.params.id].longURL = longURL;
-    res.redirect("/urls");
+    if (urlDatabase[req.params.id].user_id === req.session.user_id) {
+      urlDatabase[req.params.id].longURL = longURL;
+      res.redirect("/urls");
+    } else {
+      res.redirect("/login");
+    }
   } else {
     res.redirect("/login");
   }
@@ -207,13 +215,17 @@ app.post("/urls/:id", (req, res) => {
 
 // Submit a new shortURL
 app.post("/urls", (req, res) => {
-  let shortURL = generateRandomString();
-  let { longURL } = req.body;
-  urlDatabase[shortURL] = {
-    longURL,
-    userID: req.session.user_id,
-  };
-  res.redirect(`/urls/${shortURL}`);
+  if (req.session.user_id) {
+    let shortURL = generateRandomString();
+    let { longURL } = req.body;
+    urlDatabase[shortURL] = {
+      longURL,
+      userID: req.session.user_id,
+    };
+    res.redirect(`/urls/${shortURL}`);
+  } else {
+    return res.status(400).send("Could not create URL");
+  }
 });
 
 // Logout and clear all cookies
