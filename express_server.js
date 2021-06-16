@@ -185,7 +185,7 @@ app.post("/login", (req, res) => {
 // Submit delete shortURL request
 app.post("/urls/:shortURL/delete", (req, res) => {
   if (req.session.user_id) {
-    if (urlDatabase[req.params.id].user_id === req.session.user_id) {
+    if (urlDatabase[req.params.shortURL].userID === req.session.user_id) {
       const shortURL = req.params.shortURL;
       delete urlDatabase[shortURL];
 
@@ -202,7 +202,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 app.post("/urls/:id", (req, res) => {
   let { longURL } = req.body;
   if (req.session.user_id) {
-    if (urlDatabase[req.params.id].user_id === req.session.user_id) {
+    if (urlDatabase[req.params.id].userID === req.session.user_id) {
       urlDatabase[req.params.id].longURL = longURL;
       res.redirect("/urls");
     } else {
